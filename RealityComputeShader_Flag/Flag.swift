@@ -6,33 +6,31 @@ Flag simulation Metal compute wrapper.
 */
 
 // References to Metal do not compile for the Simulator.
-#if !targetEnvironment(simulator)
+//#if !targetEnvironment(simulator)
 import Foundation
 import Metal
-import SceneKit
+import RealityKit
 
 struct SimulationData {
-    var wind: float3
+    var wind: SIMD3<Float>
     var pad1: Float = 0
     
-    init(wind: float3) {
+    init(wind: SIMD3<Float>) {
         self.wind = wind
     }
 }
 
 struct ClothData {
-    var clothNode: SCNNode
+    var clothEntity: ModelEntity
     var meshData: ClothSimMetalNode
     
-    init(clothNode: SCNNode, meshData: ClothSimMetalNode) {
-        self.clothNode = clothNode
+    init(clothEntity: ModelEntity, meshData: ClothSimMetalNode) {
+        self.clothEntity = clothEntity
         self.meshData = meshData
     }
 }
 
 class ClothSimMetalNode {
-    let geometry: SCNGeometry
-    
     let vb1: MTLBuffer
     let vb2: MTLBuffer
     let normalBuffer: MTLBuffer
@@ -44,17 +42,17 @@ class ClothSimMetalNode {
     var currentBufferIndex: Int = 0
     
     init(device: MTLDevice, width: uint, height: uint) {
-        var vertices: [float3] = []
-        var normals: [float3] = []
-        var uvs: [float2] = []
+        var vertices: [SIMD3<Float>] = []
+        var normals: [SIMD3<Float>] = []
+        var uvs: [SIMD2<Float>] = []
         var indices: [UInt32] = []
         
         for y in 0..<height {
             for x in 0..<width {
-                let p = float3(Float(x), 0, Float(y))
+                let p = SIMD3<Float>(Float(x), 0, Float(y))
                 vertices.append(p)
-                normals.append(float3(0, 1, 0))
-                uvs.append(float2(p.x / Float(width), p.z / Float(height)))
+                normals.append(SIMD3<Float>(0, 1, 0))
+                uvs.append(SIMD2<Float>(p.x / Float(width), p.z / Float(height)))
             }
         }
         
@@ -79,65 +77,61 @@ class ClothSimMetalNode {
         }
         
         let vertexBuffer1 = device.makeBuffer(bytes: vertices,
-                                              length: vertices.count * MemoryLayout<float3>.size,
+                                              length: vertices.count * MemoryLayout<SIMD3<Float>>.size,
                                               options: [.storageModeShared])
         let length = vertices.count
-        let float4Ptr = vertexBuffer1?.contents().bindMemory(to: float3.self,capacity: length)
+        let float4Ptr = vertexBuffer1?.contents().bindMemory(to: SIMD3<Float>.self,capacity: length)
         let float4Buffer = UnsafeBufferPointer(start: float4Ptr,count: length)
         let output = Array(float4Buffer)
         
-        let vertexBuffer2 = device.makeBuffer(length: vertices.count * MemoryLayout<float3>.size,
+        let vertexBuffer2 = device.makeBuffer(length: vertices.count * MemoryLayout<SIMD3<Float>>.size,
                                               options: [.cpuCacheModeWriteCombined])
         
-        let vertexSource = SCNGeometrySource(buffer: vertexBuffer1!,
-                                             vertexFormat: .float3,
-                                             semantic: .vertex,
-                                             vertexCount: vertices.count,
-                                             dataOffset: 0,
-                                             dataStride: MemoryLayout<float3>.size)
+//        let vertexSource = SCNGeometrySource(buffer: vertexBuffer1!,
+//                                             vertexFormat: .float3,
+//                                             semantic: .vertex,
+//                                             vertexCount: vertices.count,
+//                                             dataOffset: 0,
+//                                             dataStride: MemoryLayout<float3>.size)
         
         let normalBuffer = device.makeBuffer(bytes: normals,
-                                             length: normals.count * MemoryLayout<float3>.size,
-                                             options: [.cpuCacheModeWriteCombined])
+                                             length: normals.count * MemoryLayout<SIMD3<Float>>.size,
+                                             options: [.storageModeShared])
         
-        let normalWorkBuffer = device.makeBuffer(length: normals.count * MemoryLayout<float3>.size,
+        let normalWorkBuffer = device.makeBuffer(length: normals.count * MemoryLayout<SIMD3<Float>>.size,
                                                  options: [.cpuCacheModeWriteCombined])
         
-        let normalSource = SCNGeometrySource(buffer: normalBuffer!,
-                                             vertexFormat: .float3,
-                                             semantic: .normal,
-                                             vertexCount: normals.count,
-                                             dataOffset: 0,
-                                             dataStride: MemoryLayout<float3>.size)
-        
-        let uvBuffer = device.makeBuffer(bytes: uvs,
-                                         length: uvs.count * MemoryLayout<float2>.size,
-                                         options: [.cpuCacheModeWriteCombined])
-        
-        let uvSource = SCNGeometrySource(buffer: uvBuffer!,
-                                         vertexFormat: .float2,
-                                         semantic: .texcoord,
-                                         vertexCount: uvs.count,
-                                         dataOffset: 0,
-                                         dataStride: MemoryLayout<float2>.size)
-        
-        let indexElement = SCNGeometryElement(indices: indices, primitiveType: .triangles)
-        let geo = SCNGeometry(sources: [vertexSource, normalSource, uvSource], elements: [indexElement])
+//        let normalSource = SCNGeometrySource(buffer: normalBuffer!,
+//                                             vertexFormat: .float3,
+//                                             semantic: .normal,
+//                                             vertexCount: normals.count,
+//                                             dataOffset: 0,
+//                                             dataStride: MemoryLayout<float3>.size)
+
+//        let indexElement = SCNGeometryElement(indices: indices, primitiveType: .triangles)
+//        let geo = SCNGeometry(sources: [vertexSource, normalSource, uvSource], elements: [indexElement])
         
         // velocity buffers
-        let velocityBuffer1 = device.makeBuffer(length: vertices.count * MemoryLayout<float3>.size,
+        let velocityBuffer1 = device.makeBuffer(length: vertices.count * MemoryLayout<SIMD3<Float>>.size,
                                                 options: [.cpuCacheModeWriteCombined])
         
-        let velocityBuffer2 = device.makeBuffer(length: vertices.count * MemoryLayout<float3>.size,
+        let velocityBuffer2 = device.makeBuffer(length: vertices.count * MemoryLayout<SIMD3<Float>>.size,
                                                 options: [.cpuCacheModeWriteCombined])
         
-        self.geometry = geo
         self.vertexCount = vertices.count
         self.vb1 = vertexBuffer1!
         self.vb2 = vertexBuffer2!
         self.normalBuffer = normalBuffer!
         self.normalWorkBuffer = normalWorkBuffer!
         self.velocityBuffers = [velocityBuffer1!, velocityBuffer2!]
+    }
+    @MainActor
+    func generateMeshResource() -> MeshResource {
+        do {
+            return try MeshResource.generate(from: MeshResource.Contents())
+        } catch  {
+            print(error)
+        }
     }
 }
 
@@ -180,42 +174,36 @@ class MetalClothSimulator {
             fatalError("\(error)")
         }
     }
-    
-    func createFlagSimulationFromNode(_ node: SCNNode) {
+    @MainActor
+    func createFlagSimulationFromNode(_ flag: ModelEntity) {
         let meshData = ClothSimMetalNode(device: device, width: width, height: height)
-        let clothNode = SCNNode(geometry: meshData.geometry)
         
-        guard let flag = node.childNode(withName: "flagStaticWave", recursively: true) else { return }
+        guard let flagModel = flag.model else {return}
         
-        let boundingBox = flag.simdBoundingBox
+        let clothEntity = ModelEntity(mesh: meshData.generateMeshResource())
+        
+        let boundingBox = flagModel.mesh.bounds
         let existingFlagBV = boundingBox.max - boundingBox.min
-        let rescaleToMatchSizeMatrix = float4x4(scale: existingFlagBV.x / Float(width))
-        
-        let rotation = simd_quatf(angle: .pi / 2, axis: float3(1, 0, 0))
+        let rescaleToMatchSizeMatrix = float4x4(existingFlagBV.x / Float(width))
+        let rotation = simd_quatf(angle: .pi / 2, axis: SIMD3<Float>(1, 0, 0))
         let localTransform = rescaleToMatchSizeMatrix * float4x4(rotation)
         
-        clothNode.simdTransform = flag.simdTransform * localTransform
-        
-        clothNode.geometry?.firstMaterial = flag.geometry?.firstMaterial
-        clothNode.geometry?.firstMaterial?.isDoubleSided = true
+        clothEntity.transform.matrix = flag.transform.matrix * localTransform
+        clothEntity.model?.materials = flagModel.materials
 
-        flag.parent?.replaceChildNode(flag, with: clothNode)
-        clothNode.setupPaintColorMask(clothNode.geometry!, name: "flag_flagA")
-        clothNode.setPaintColors()
-        clothNode.fixNormalMaps()
+        flag.parent?.addChild(clothEntity)
+        flag.removeFromParent()
         
-        clothData.append( ClothData(clothNode: clothNode, meshData: meshData) )
+        clothData.append(ClothData(clothEntity: clothEntity, meshData: meshData) )
     }
     
-    func update(_ node: SCNNode) {
-       
+    func update(_ modelEntity: ModelEntity) {
         for cloth in clothData {
-            let wind = float3(1.8, 0.0, 0.0)
+            let wind = SIMD3<Float>(1.8, 0.0, 0.0)
             
             // The multiplier is to rescale ball to flag model space.
             // The correct value should be passed in.
             let simData = SimulationData(wind: wind)
-            
             deform(cloth.meshData, simData: simData)
         }
     }
@@ -275,5 +263,5 @@ class MetalClothSimulator {
         normalSmoothComputeCommandBuffer?.commit()
     }
 }
-#endif
+//#endif
 
