@@ -126,12 +126,13 @@ class ClothSimMetalNode {
         self.velocityBuffers = [velocityBuffer1!, velocityBuffer2!]
     }
     @MainActor
-    func generateMeshResource() -> MeshResource {
+    func generateMeshResource() -> MeshResource? {
         do {
             return try MeshResource.generate(from: MeshResource.Contents())
         } catch  {
             print(error)
         }
+        return nil
     }
 }
 
@@ -180,7 +181,8 @@ class MetalClothSimulator {
         
         guard let flagModel = flag.model else {return}
         
-        let clothEntity = ModelEntity(mesh: meshData.generateMeshResource())
+        guard let mesh = meshData.generateMeshResource() else { return }
+        let clothEntity = ModelEntity(mesh: mesh)
         
         let boundingBox = flagModel.mesh.bounds
         let existingFlagBV = boundingBox.max - boundingBox.min
