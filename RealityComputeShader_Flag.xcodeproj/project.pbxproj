@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		6C74E1F22C15B8050065A88F /* LetsVisionOS.png in Resources */ = {isa = PBXBuildFile; fileRef = 6C74E1F12C15B8050065A88F /* LetsVisionOS.png */; };
 		6C77CB732C109474006B920C /* Flag.metal in Sources */ = {isa = PBXBuildFile; fileRef = 6C77CB712C109474006B920C /* Flag.metal */; };
 		6C77CB742C109474006B920C /* Flag.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6C77CB722C109474006B920C /* Flag.swift */; };
 		6C7C67EE2C1093F700905CFA /* RealityComputeShader_FlagApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6C7C67ED2C1093F700905CFA /* RealityComputeShader_FlagApp.swift */; };
@@ -17,6 +18,7 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		6C74E1F12C15B8050065A88F /* LetsVisionOS.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = LetsVisionOS.png; sourceTree = "<group>"; };
 		6C77CB712C109474006B920C /* Flag.metal */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.metal; path = Flag.metal; sourceTree = "<group>"; };
 		6C77CB722C109474006B920C /* Flag.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Flag.swift; sourceTree = "<group>"; };
 		6C7C67E62C1093F700905CFA /* RealityComputeShader_Flag.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = RealityComputeShader_Flag.app; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -63,6 +65,7 @@
 				6C7C67F12C1093F700905CFA /* ImmersiveView.swift */,
 				6C77CB712C109474006B920C /* Flag.metal */,
 				6C77CB722C109474006B920C /* Flag.swift */,
+				6C74E1F12C15B8050065A88F /* LetsVisionOS.png */,
 				6C7C67F32C1093F800905CFA /* Assets.xcassets */,
 				6C7C67F82C1093F800905CFA /* Info.plist */,
 				6C7C67F52C1093F800905CFA /* Preview Content */,
@@ -138,6 +141,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				6C74E1F22C15B8050065A88F /* LetsVisionOS.png in Resources */,
 				6C7C67F72C1093F800905CFA /* Preview Assets.xcassets in Resources */,
 				6C7C67F42C1093F800905CFA /* Assets.xcassets in Resources */,
 			);

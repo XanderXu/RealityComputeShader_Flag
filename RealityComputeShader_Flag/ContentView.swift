@@ -19,9 +19,10 @@ struct ContentView: View {
     var body: some View {
         VStack {
             
-            Text("Hello, world!")
+            Text("Hello, Computer Shader!")
+                .font(.title)
 
-            Toggle("Show ImmersiveSpace", isOn: $showImmersiveSpace)
+            Toggle("Show Flag movement", isOn: $showImmersiveSpace)
                 .font(.title)
                 .frame(width: 360)
                 .padding(24)

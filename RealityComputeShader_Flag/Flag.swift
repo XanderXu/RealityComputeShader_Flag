@@ -41,6 +41,9 @@ class ClothSimMetalNode {
     
     var currentBufferIndex: Int = 0
     
+    private let uvs: [SIMD2<Float>]
+    private let indices: [UInt32]
+    
     init(device: MTLDevice, width: uint, height: uint) {
         var vertices: [SIMD3<Float>] = []
         var normals: [SIMD3<Float>] = []
@@ -52,7 +55,7 @@ class ClothSimMetalNode {
                 let p = SIMD3<Float>(Float(x), 0, Float(y))
                 vertices.append(p)
                 normals.append(SIMD3<Float>(0, 1, 0))
-                uvs.append(SIMD2<Float>(p.x / Float(width), p.z / Float(height)))
+                uvs.append(SIMD2<Float>(p.x / Float(width), 1 - p.z / Float(height)))
             }
         }
         
@@ -79,20 +82,10 @@ class ClothSimMetalNode {
         let vertexBuffer1 = device.makeBuffer(bytes: vertices,
                                               length: vertices.count * MemoryLayout<SIMD3<Float>>.size,
                                               options: [.storageModeShared])
-        let length = vertices.count
-        let float4Ptr = vertexBuffer1?.contents().bindMemory(to: SIMD3<Float>.self,capacity: length)
-        let float4Buffer = UnsafeBufferPointer(start: float4Ptr,count: length)
-        let output = Array(float4Buffer)
+        
         
         let vertexBuffer2 = device.makeBuffer(length: vertices.count * MemoryLayout<SIMD3<Float>>.size,
                                               options: [.cpuCacheModeWriteCombined])
-        
-//        let vertexSource = SCNGeometrySource(buffer: vertexBuffer1!,
-//                                             vertexFormat: .float3,
-//                                             semantic: .vertex,
-//                                             vertexCount: vertices.count,
-//                                             dataOffset: 0,
-//                                             dataStride: MemoryLayout<float3>.size)
         
         let normalBuffer = device.makeBuffer(bytes: normals,
                                              length: normals.count * MemoryLayout<SIMD3<Float>>.size,
@@ -100,17 +93,7 @@ class ClothSimMetalNode {
         
         let normalWorkBuffer = device.makeBuffer(length: normals.count * MemoryLayout<SIMD3<Float>>.size,
                                                  options: [.cpuCacheModeWriteCombined])
-        
-//        let normalSource = SCNGeometrySource(buffer: normalBuffer!,
-//                                             vertexFormat: .float3,
-//                                             semantic: .normal,
-//                                             vertexCount: normals.count,
-//                                             dataOffset: 0,
-//                                             dataStride: MemoryLayout<float3>.size)
 
-//        let indexElement = SCNGeometryElement(indices: indices, primitiveType: .triangles)
-//        let geo = SCNGeometry(sources: [vertexSource, normalSource, uvSource], elements: [indexElement])
-        
         // velocity buffers
         let velocityBuffer1 = device.makeBuffer(length: vertices.count * MemoryLayout<SIMD3<Float>>.size,
                                                 options: [.cpuCacheModeWriteCombined])
@@ -124,11 +107,42 @@ class ClothSimMetalNode {
         self.normalBuffer = normalBuffer!
         self.normalWorkBuffer = normalWorkBuffer!
         self.velocityBuffers = [velocityBuffer1!, velocityBuffer2!]
+        
+        self.uvs = uvs
+        self.indices = indices
+    }
+    
+    func generateMeshContets() -> MeshResource.Contents {
+        let length = vertexCount
+        
+        let float4Ptr = vb1.contents().bindMemory(to: SIMD3<Float>.self,capacity: length)
+        let float4Buffer = UnsafeBufferPointer(start: float4Ptr,count: length)
+        let vertices = Array(float4Buffer)
+        
+        let float4PtrNormal = normalBuffer.contents().bindMemory(to: SIMD3<Float>.self,capacity: length)
+        let float4BufferNormal = UnsafeBufferPointer(start: float4PtrNormal,count: length)
+        let normals = Array(float4BufferNormal)
+        
+        var part = MeshResource.Part(id: "MeshPart", materialIndex: 0)
+        part.triangleIndices = .init(indices)
+        part.textureCoordinates = .init(uvs)
+        part.normals = .init(normals)
+        part.positions = .init(vertices)
+        
+        let model = MeshResource.Model(id: "MeshModel", parts: [part])
+        let instance = MeshResource.Instance(id: "MeshModel-0", model: "MeshModel")
+        
+        var contents = MeshResource.Contents()
+        contents.instances = .init([instance])
+        contents.models = .init([model])
+        
+        return contents
     }
     @MainActor
     func generateMeshResource() -> MeshResource? {
+        let contents = generateMeshContets()
         do {
-            return try MeshResource.generate(from: MeshResource.Contents())
+            return try MeshResource.generate(from: contents)
         } catch  {
             print(error)
         }
@@ -186,9 +200,14 @@ class MetalClothSimulator {
         
         let boundingBox = flagModel.mesh.bounds
         let existingFlagBV = boundingBox.max - boundingBox.min
-        let rescaleToMatchSizeMatrix = float4x4(existingFlagBV.x / Float(width))
-        let rotation = simd_quatf(angle: .pi / 2, axis: SIMD3<Float>(1, 0, 0))
-        let localTransform = rescaleToMatchSizeMatrix * float4x4(rotation)
+        let rescaleToMatchSizeMatrix = float4x4(diagonal: SIMD4<Float>(SIMD3<Float>(repeating: (existingFlagBV.x / Float(width))), 1))
+        let translation = matrix_float4x4(
+            SIMD4<Float>.init(x: 1, y: 0, z: 0, w: 0),
+            SIMD4<Float>.init(x: 0, y: 1, z: 0, w: 0),
+            SIMD4<Float>.init(x: 0, y: 0, z: 1, w: 0),
+            SIMD4<Float>.init(-boundingBox.extents/2, 1)
+        )
+        let localTransform = rescaleToMatchSizeMatrix * translation
         
         clothEntity.transform.matrix = flag.transform.matrix * localTransform
         clothEntity.model?.materials = flagModel.materials
@@ -199,7 +218,7 @@ class MetalClothSimulator {
         clothData.append(ClothData(clothEntity: clothEntity, meshData: meshData) )
     }
     
-    func update(_ modelEntity: ModelEntity) {
+    func update() {
         for cloth in clothData {
             let wind = SIMD3<Float>(1.8, 0.0, 0.0)
             
@@ -207,6 +226,14 @@ class MetalClothSimulator {
             // The correct value should be passed in.
             let simData = SimulationData(wind: wind)
             deform(cloth.meshData, simData: simData)
+            
+            let contents = cloth.meshData.generateMeshContets()
+            do {
+                try cloth.clothEntity.model?.mesh.replace(with: contents)
+            } catch {
+                print(error)
+            }
+            
         }
     }
 
