@@ -18,7 +18,7 @@ struct ContentView: View {
 
     var body: some View {
         VStack {
-            Text("Hello, Computer Shader!")
+            Text("Hello, Compute Shader!")
                 .font(.title)
 
             Text("https://github.com/XanderXu/RealityComputeShader_Flag")
