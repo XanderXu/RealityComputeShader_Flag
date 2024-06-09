@@ -19,11 +19,11 @@ struct ImmersiveView: View {
             let tex = try! await TextureResource.init(named: "LetsVisionOS")
             var material = PhysicallyBasedMaterial()
             material.baseColor = .init(texture: .init(tex))
-            material.metallic = .init(floatLiteral: 0)
+            material.metallic = .init(floatLiteral: 0.1)
             
             let plane = MeshResource.generatePlane(width: 1, depth: 1)
             let entity = ModelEntity(mesh: plane, materials: [material])
-            entity.position = simd_float3(x: 0, y: 1, z: -1)
+            entity.position = simd_float3(x: -0.5, y: 0.8, z: -1.5)
             entity.name = "flag"
             content.add(entity)
             

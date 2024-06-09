@@ -18,9 +18,14 @@ struct ContentView: View {
 
     var body: some View {
         VStack {
-            
             Text("Hello, Computer Shader!")
                 .font(.title)
+
+            Text("https://github.com/XanderXu/RealityComputeShader_Flag")
+                .font(.title2)
+                .foregroundStyle(.white)
+                .underline(true,pattern: .solid)
+                .padding(.bottom)
 
             Toggle("Show Flag movement", isOn: $showImmersiveSpace)
                 .font(.title)
@@ -28,6 +33,7 @@ struct ContentView: View {
                 .padding(24)
                 .glassBackgroundEffect()
         }
+        
         .padding()
         .onChange(of: showImmersiveSpace) { _, newValue in
             Task {
