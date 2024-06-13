@@ -1,15 +1,17 @@
 //
-//  RealityComputeShader_FlagApp.swift
-//  RealityComputeShader_Flag
+//  RealityComputeShader_FlagV2App.swift
+//  RealityComputeShader_FlagV2
 //
-//  Created by 许同学 on 2024/6/5.
+//  Created by 许同学 on 2024/6/13.
 //
 
 import SwiftUI
 
 @main
-struct RealityComputeShader_FlagApp: App {
+struct RealityComputeShader_FlagV2App: App {
+
     @State private var appModel = AppModel()
+
     var body: some Scene {
         WindowGroup {
             ContentView()
@@ -27,5 +29,5 @@ struct RealityComputeShader_FlagApp: App {
                 }
         }
         .immersionStyle(selection: .constant(.mixed), in: .mixed)
-    }
+     }
 }

@@ -1,12 +1,13 @@
 //
 //  ContentView.swift
-//  RealityComputeShader_Flag
+//  RealityComputeShader_FlagV2
 //
-//  Created by 许同学 on 2024/6/5.
+//  Created by 许同学 on 2024/6/13.
 //
 
 import SwiftUI
 import RealityKit
+import RealityKitContent
 
 struct ContentView: View {
 
@@ -24,10 +25,10 @@ struct ContentView: View {
             ToggleImmersiveSpaceButton()
         }
         .padding()
-        
     }
 }
 
 #Preview(windowStyle: .automatic) {
     ContentView()
+        .environment(AppModel())
 }
