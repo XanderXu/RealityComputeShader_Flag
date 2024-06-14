@@ -31,12 +31,14 @@ struct ClothData {
 }
 struct MyVertex {
     var position: SIMD3<Float> = .zero
-    var color: UInt32 = .zero
+    var normal: SIMD3<Float> = .zero
+    var uv: SIMD2<Float> = .zero
 }
 extension MyVertex {
     static var vertexAttributes: [LowLevelMesh.Attribute] = [
         .init(semantic: .position, format: .float3, offset: MemoryLayout<Self>.offset(of: \.position)!),
-        .init(semantic: .color, format: .uchar4Normalized_bgra, offset: MemoryLayout<Self>.offset(of: \.color)!)
+        .init(semantic: .normal, format: .float3, offset: MemoryLayout<Self>.offset(of: \.normal)!),
+        .init(semantic: .uv0, format: .float2, offset: MemoryLayout<Self>.offset(of: \.uv)!)
     ]
 
     static var vertexLayouts: [LowLevelMesh.Layout] = [
@@ -131,15 +133,15 @@ class ClothSimMetalNode {
         self.normalWorkBuffer = normalWorkBuffer!
         self.velocityBuffers = [velocityBuffer1!, velocityBuffer2!]
         self.lowLevelMesh = generateLowLevelMesh(width: width, height: height)
-        
         self.uvs = uvs
+        
         self.indices = indices
     }
     
     func generateLowLevelMesh(width: uint, height: uint) -> LowLevelMesh? {
         var desc = MyVertex.descriptor
-        desc.vertexCapacity = 3
-        desc.indexCapacity = 3
+        desc.vertexCapacity = vertexCount
+        desc.indexCapacity = indices.count
         
         
         let mesh = try? LowLevelMesh(descriptor: desc)
