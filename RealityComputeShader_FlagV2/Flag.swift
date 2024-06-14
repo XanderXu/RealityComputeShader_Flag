@@ -29,6 +29,28 @@ struct ClothData {
         self.meshData = meshData
     }
 }
+struct MyVertex {
+    var position: SIMD3<Float> = .zero
+    var color: UInt32 = .zero
+}
+extension MyVertex {
+    static var vertexAttributes: [LowLevelMesh.Attribute] = [
+        .init(semantic: .position, format: .float3, offset: MemoryLayout<Self>.offset(of: \.position)!),
+        .init(semantic: .color, format: .uchar4Normalized_bgra, offset: MemoryLayout<Self>.offset(of: \.color)!)
+    ]
+
+    static var vertexLayouts: [LowLevelMesh.Layout] = [
+        .init(bufferIndex: 0, bufferStride: MemoryLayout<Self>.stride)
+    ]
+
+    static var descriptor: LowLevelMesh.Descriptor {
+        var desc = LowLevelMesh.Descriptor()
+        desc.vertexAttributes = MyVertex.vertexAttributes
+        desc.vertexLayouts = MyVertex.vertexLayouts
+        desc.indexType = .uint32
+        return desc
+    }
+}
 
 class ClothSimMetalNode {
     let vb1: MTLBuffer
@@ -43,6 +65,7 @@ class ClothSimMetalNode {
     
     private let uvs: [SIMD2<Float>]
     private let indices: [UInt32]
+    private var lowLevelMesh: LowLevelMesh?
     
     init(device: MTLDevice, width: uint, height: uint) {
         var vertices: [SIMD3<Float>] = []
@@ -81,7 +104,7 @@ class ClothSimMetalNode {
         
         let vertexBuffer1 = device.makeBuffer(bytes: vertices,
                                               length: vertices.count * MemoryLayout<SIMD3<Float>>.size,
-                                              options: [.storageModeShared])
+                                              options: [.storageModeShared])//.storageModePrivate
         
         
         let vertexBuffer2 = device.makeBuffer(length: vertices.count * MemoryLayout<SIMD3<Float>>.size,
@@ -107,44 +130,44 @@ class ClothSimMetalNode {
         self.normalBuffer = normalBuffer!
         self.normalWorkBuffer = normalWorkBuffer!
         self.velocityBuffers = [velocityBuffer1!, velocityBuffer2!]
+        self.lowLevelMesh = generateLowLevelMesh(width: width, height: height)
         
         self.uvs = uvs
         self.indices = indices
     }
     
-    func generateMeshContets() -> MeshResource.Contents {
-        let length = vertexCount
+    func generateLowLevelMesh(width: uint, height: uint) -> LowLevelMesh? {
+        var desc = MyVertex.descriptor
+        desc.vertexCapacity = 3
+        desc.indexCapacity = 3
         
-        let float4Ptr = vb1.contents().bindMemory(to: SIMD3<Float>.self,capacity: length)
-        let float4Buffer = UnsafeBufferPointer(start: float4Ptr,count: length)
-        let vertices = Array(float4Buffer)
         
-        let float4PtrNormal = normalBuffer.contents().bindMemory(to: SIMD3<Float>.self,capacity: length)
-        let float4BufferNormal = UnsafeBufferPointer(start: float4PtrNormal,count: length)
-        let normals = Array(float4BufferNormal)
+        let mesh = try? LowLevelMesh(descriptor: desc)
+        mesh?.withUnsafeMutableIndices { rawIndices in
+            let indices = rawIndices.bindMemory(to: UInt32.self)
+            indices = indices
+        }
         
-        var part = MeshResource.Part(id: "MeshPart", materialIndex: 0)
-        part.triangleIndices = .init(indices)
-        part.textureCoordinates = .init(uvs)
-        part.normals = .init(normals)
-        part.positions = .init(vertices)
+        let meshBounds = BoundingBox(min: [0, -0.1, 0], max: [Float(width), 0.1, Float(height)])
+        mesh?.parts.replaceAll([
+            LowLevelMesh.Part(
+                indexCount: vertexCount,
+                topology: .triangle,
+                materialIndex: 0,
+                bounds: meshBounds
+            )
+        ])
         
-        let model = MeshResource.Model(id: "MeshModel", parts: [part])
-        let instance = MeshResource.Instance(id: "MeshModel-0", model: "MeshModel")
-        
-        var contents = MeshResource.Contents()
-        contents.instances = .init([instance])
-        contents.models = .init([model])
-        
-        return contents
+        return mesh
     }
     @MainActor
     func generateMeshResource() -> MeshResource? {
-        let contents = generateMeshContets()
-        do {
-            return try MeshResource.generate(from: contents)
-        } catch  {
-            print(error)
+        if let lowLevelMesh {
+            do {
+                return try MeshResource.generate(from: lowLevelMesh)
+            } catch  {
+                print(error)
+            }
         }
         return nil
     }
@@ -226,13 +249,6 @@ class MetalClothSimulator {
             // The correct value should be passed in.
             let simData = SimulationData(wind: wind)
             deform(cloth.meshData, simData: simData)
-            
-            let contents = cloth.meshData.generateMeshContets()
-            do {
-                try cloth.clothEntity.model?.mesh.replace(with: contents)
-            } catch {
-                print(error)
-            }
             
         }
     }
