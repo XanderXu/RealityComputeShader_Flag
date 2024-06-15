@@ -9,7 +9,6 @@ import SwiftUI
 import RealityKit
 
 struct ImmersiveView: View {
-    @State private var flagSimulation: MetalClothSimulator?
     @State private var subscriptions = [EventSubscription]()
     
     var body: some View {
@@ -32,11 +31,11 @@ struct ImmersiveView: View {
             guard let device = MTLCreateSystemDefaultDevice() else {
                 fatalError( "Failed to get the system's default Metal device." )
             }
-            flagSimulation = MetalClothSimulator(device: device)
-            flagSimulation?.createFlagSimulationFromNode(entity)
+            let flagSimulation = MetalClothSimulator(device: device)
+            flagSimulation.createFlagSimulationFromNode(entity)
             
             let sub = content.subscribe(to: SceneEvents.Update.self) { event in
-                flagSimulation?.update()
+                flagSimulation.update()
             }
             subscriptions.append(sub)
         }

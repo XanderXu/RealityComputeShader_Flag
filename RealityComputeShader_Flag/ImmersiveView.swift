@@ -10,12 +10,10 @@ import RealityKit
 
 @MainActor
 struct ImmersiveView: View {
-    @State private var flagSimulation: MetalClothSimulator?
     @State private var subscriptions = [EventSubscription]()
     
     var body: some View {
         RealityView { content in
-//            let material = SimpleMaterial(color: .red, isMetallic: false)
             let tex = try! await TextureResource.init(named: "LetsVisionOS")
             var material = PhysicallyBasedMaterial()
             material.baseColor = .init(texture: .init(tex))
@@ -32,11 +30,11 @@ struct ImmersiveView: View {
             guard let device = MTLCreateSystemDefaultDevice() else {
                 fatalError( "Failed to get the system's default Metal device." )
             }
-            flagSimulation = MetalClothSimulator(device: device)
-            flagSimulation?.createFlagSimulationFromNode(entity)
+            let flagSimulation = MetalClothSimulator(device: device)
+            flagSimulation.createFlagSimulationFromNode(entity)
             
             let sub = content.subscribe(to: SceneEvents.Update.self) { event in
-                flagSimulation?.update()
+                flagSimulation.update()
             }
             subscriptions.append(sub)
         }

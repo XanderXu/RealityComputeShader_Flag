@@ -58,6 +58,7 @@ class ClothSimMetalNode {
     let vb2: MTLBuffer
     let normalBuffer: MTLBuffer
     let normalWorkBuffer: MTLBuffer
+    let uvBuffer: MTLBuffer
     let vertexCount: Int
     
     var velocityBuffers = [MTLBuffer]()
@@ -112,6 +113,10 @@ class ClothSimMetalNode {
                                              length: normals.count * MemoryLayout<SIMD3<Float>>.size,
                                              options: [.cpuCacheModeWriteCombined])
         
+        let uvBuffer = device.makeBuffer(bytes: uvs,
+                                             length: normals.count * MemoryLayout<SIMD2<Float>>.size,
+                                             options: [.cpuCacheModeWriteCombined])
+        
         let normalWorkBuffer = device.makeBuffer(length: normals.count * MemoryLayout<SIMD3<Float>>.size,
                                                  options: [.storageModePrivate])
 
@@ -127,6 +132,7 @@ class ClothSimMetalNode {
         self.vb2 = vertexBuffer2!
         self.normalBuffer = normalBuffer!
         self.normalWorkBuffer = normalWorkBuffer!
+        self.uvBuffer = uvBuffer!
         self.velocityBuffers = [velocityBuffer1!, velocityBuffer2!]
         
         self.lowLevelMesh = generateLowLevelMesh(vertices: vertices, normals: normals, uvs: uvs, indices: indices, width: width, height: height)
@@ -164,7 +170,7 @@ class ClothSimMetalNode {
             let _ = rawBufferPointer.withMemoryRebound(to: SIMD3<Float>.self) { buffer in
                 let offset = buffer.update(fromContentsOf: vertices+normals)
                 buffer.suffix(from: offset).withMemoryRebound(to: SIMD2<Float>.self) { buffer2 in
-                    let end = buffer2.update(fromContentsOf: uvs)
+                    let _ = buffer2.update(fromContentsOf: uvs)
 //                    print(end)
                 }
 //                print(offset)
@@ -288,7 +294,7 @@ class MetalClothSimulator {
         let threadgroupsPerGrid = MTLSize(width: (mesh.vertexCount + w - 1) / w,
                                           height: 1,
                                           depth: 1)
-        
+                
         let clothSimCommandBuffer = commandQueue.makeCommandBuffer()
         let clothSimCommandEncoder = clothSimCommandBuffer?.makeComputeCommandEncoder()
         
@@ -315,23 +321,19 @@ class MetalClothSimulator {
         
         clothSimCommandEncoder?.endEncoding()
         clothSimCommandBuffer?.commit()
-        
-//        clothSimCommandBuffer?.waitUntilCompleted()
-            
+                    
         let blitBuffer = commandQueue.makeCommandBuffer()
         let blitEncoder = blitBuffer?.makeBlitCommandEncoder()
-        
         guard let vb = mesh.lowLevelMesh?.replace(bufferIndex: 0, using: blitBuffer!) else {
             return
         }
         
         blitEncoder?.copy(from: mesh.vb1, sourceOffset: 0, to: vb, destinationOffset: 0, size: MemoryLayout<SIMD3<Float>>.size * mesh.vertexCount)
         blitEncoder?.copy(from: mesh.normalBuffer, sourceOffset: 0, to: vb, destinationOffset: MemoryLayout<SIMD3<Float>>.size * mesh.vertexCount, size: MemoryLayout<SIMD3<Float>>.size * mesh.vertexCount)
+        blitEncoder?.copy(from: mesh.uvBuffer, sourceOffset: 0, to: vb, destinationOffset: MemoryLayout<SIMD3<Float>>.size * mesh.vertexCount * 2, size: MemoryLayout<SIMD2<Float>>.size * mesh.vertexCount)
         
         blitEncoder?.endEncoding()
         blitBuffer?.commit()
-                
-                
     }
 }
 
