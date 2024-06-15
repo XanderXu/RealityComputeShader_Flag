@@ -324,12 +324,14 @@ class MetalClothSimulator {
         guard let vb = mesh.lowLevelMesh?.replace(bufferIndex: 0, using: blitBuffer!) else {
             return
         }
-
+        
         blitEncoder?.copy(from: mesh.vb1, sourceOffset: 0, to: vb, destinationOffset: 0, size: MemoryLayout<SIMD3<Float>>.size * mesh.vertexCount)
         blitEncoder?.copy(from: mesh.normalBuffer, sourceOffset: 0, to: vb, destinationOffset: MemoryLayout<SIMD3<Float>>.size * mesh.vertexCount, size: MemoryLayout<SIMD3<Float>>.size * mesh.vertexCount)
         
         blitEncoder?.endEncoding()
         blitBuffer?.commit()
+                
+                
     }
 }
 
