@@ -6,7 +6,6 @@ Flag simulation Metal compute wrapper.
 */
 
 // References to Metal do not compile for the Simulator.
-//#if !targetEnvironment(simulator)
 import Foundation
 import Metal
 import RealityKit
@@ -133,7 +132,6 @@ class ClothSimMetalNode {
         self.normalWorkBuffer = normalWorkBuffer!
         self.velocityBuffers = [velocityBuffer1!, velocityBuffer2!]
         self.uvs = uvs
-        
         self.indices = indices
         
         self.lowLevelMesh = generateLowLevelMesh(width: width, height: height)
@@ -311,5 +309,4 @@ class MetalClothSimulator {
         normalSmoothComputeCommandBuffer?.commit()
     }
 }
-//#endif
 

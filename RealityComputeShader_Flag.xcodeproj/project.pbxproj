@@ -12,7 +12,6 @@
 		6C27179C2C1B3FB30041816B /* LetsVisionOS.png in Resources */ = {isa = PBXBuildFile; fileRef = 6C27179B2C1B3FB30041816B /* LetsVisionOS.png */; };
 		6C27179E2C1B40BF0041816B /* AppModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6C27179D2C1B40BF0041816B /* AppModel.swift */; };
 		6C2717A02C1B40C60041816B /* ToggleImmersiveSpaceButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6C27179F2C1B40C60041816B /* ToggleImmersiveSpaceButton.swift */; };
-		6C6423BA2C1B3EB400DFCB23 /* RealityKitContent in Frameworks */ = {isa = PBXBuildFile; productRef = 6C6423B92C1B3EB400DFCB23 /* RealityKitContent */; };
 		6C6423BC2C1B3EB400DFCB23 /* RealityComputeShader_FlagV2App.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6C6423BB2C1B3EB400DFCB23 /* RealityComputeShader_FlagV2App.swift */; };
 		6C6423BE2C1B3EB400DFCB23 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6C6423BD2C1B3EB400DFCB23 /* ContentView.swift */; };
 		6C6423C02C1B3EB400DFCB23 /* AppModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6C6423BF2C1B3EB400DFCB23 /* AppModel.swift */; };
@@ -62,7 +61,6 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				6C6423BA2C1B3EB400DFCB23 /* RealityKitContent in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -163,7 +161,6 @@
 			);
 			name = RealityComputeShader_FlagV2;
 			packageProductDependencies = (
-				6C6423B92C1B3EB400DFCB23 /* RealityKitContent */,
 			);
 			productName = RealityComputeShader_FlagV2;
 			productReference = 6C6423B52C1B3EB400DFCB23 /* RealityComputeShader_FlagV2.app */;
@@ -536,13 +533,6 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
-
-/* Begin XCSwiftPackageProductDependency section */
-		6C6423B92C1B3EB400DFCB23 /* RealityKitContent */ = {
-			isa = XCSwiftPackageProductDependency;
-			productName = RealityKitContent;
-		};
-/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = 6C7C67DE2C1093F700905CFA /* Project object */;
 }
