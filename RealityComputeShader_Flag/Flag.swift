@@ -261,35 +261,38 @@ class MetalClothSimulator {
         
         clothSimCommandEncoder?.dispatchThreadgroups(threadgroupsPerGrid, threadsPerThreadgroup: threadsPerThreadgroup)
         
+//        clothSimCommandEncoder?.endEncoding()
+//        clothSimCommandBuffer?.commit()
+        
+        //
+        
+//        let normalComputeCommandBuffer = commandQueue.makeCommandBuffer()
+//        let normalComputeCommandEncoder = normalComputeCommandBuffer?.makeComputeCommandEncoder()
+        
+        clothSimCommandEncoder?.setComputePipelineState(pipelineStateNormalUpdate)
+        clothSimCommandEncoder?.setBuffer(mesh.vb2, offset: 0, index: 0)
+        clothSimCommandEncoder?.setBuffer(mesh.vb1, offset: 0, index: 1)
+        clothSimCommandEncoder?.setBuffer(mesh.normalWorkBuffer, offset: 0, index: 2)
+        clothSimCommandEncoder?.dispatchThreadgroups(threadgroupsPerGrid, threadsPerThreadgroup: threadsPerThreadgroup)
+        
+//        normalComputeCommandEncoder?.endEncoding()
+//        normalComputeCommandBuffer?.commit()
+
+        //
+        
+//        let normalSmoothComputeCommandBuffer = commandQueue.makeCommandBuffer()
+//        let normalSmoothComputeCommandEncoder = clothSimCommandBuffer?.makeComputeCommandEncoder()
+        
+        clothSimCommandEncoder?.setComputePipelineState(pipelineStateNormalSmooth)
+        clothSimCommandEncoder?.setBuffer(mesh.normalWorkBuffer, offset: 0, index: 0)
+        clothSimCommandEncoder?.setBuffer(mesh.normalBuffer, offset: 0, index: 1)
+        clothSimCommandEncoder?.dispatchThreadgroups(threadgroupsPerGrid, threadsPerThreadgroup: threadsPerThreadgroup)
+
+//        normalSmoothComputeCommandEncoder?.endEncoding()
+//        normalSmoothComputeCommandBuffer?.commit()
+        
         clothSimCommandEncoder?.endEncoding()
         clothSimCommandBuffer?.commit()
-        
-        //
-        
-        let normalComputeCommandBuffer = commandQueue.makeCommandBuffer()
-        let normalComputeCommandEncoder = normalComputeCommandBuffer?.makeComputeCommandEncoder()
-        
-        normalComputeCommandEncoder?.setComputePipelineState(pipelineStateNormalUpdate)
-        normalComputeCommandEncoder?.setBuffer(mesh.vb2, offset: 0, index: 0)
-        normalComputeCommandEncoder?.setBuffer(mesh.vb1, offset: 0, index: 1)
-        normalComputeCommandEncoder?.setBuffer(mesh.normalWorkBuffer, offset: 0, index: 2)
-        normalComputeCommandEncoder?.dispatchThreadgroups(threadgroupsPerGrid, threadsPerThreadgroup: threadsPerThreadgroup)
-        
-        normalComputeCommandEncoder?.endEncoding()
-        normalComputeCommandBuffer?.commit()
-
-        //
-        
-        let normalSmoothComputeCommandBuffer = commandQueue.makeCommandBuffer()
-        let normalSmoothComputeCommandEncoder = normalSmoothComputeCommandBuffer?.makeComputeCommandEncoder()
-        
-        normalSmoothComputeCommandEncoder?.setComputePipelineState(pipelineStateNormalSmooth)
-        normalSmoothComputeCommandEncoder?.setBuffer(mesh.normalWorkBuffer, offset: 0, index: 0)
-        normalSmoothComputeCommandEncoder?.setBuffer(mesh.normalBuffer, offset: 0, index: 1)
-        normalSmoothComputeCommandEncoder?.dispatchThreadgroups(threadgroupsPerGrid, threadsPerThreadgroup: threadsPerThreadgroup)
-
-        normalSmoothComputeCommandEncoder?.endEncoding()
-        normalSmoothComputeCommandBuffer?.commit()
     }
 }
 //#endif

@@ -132,10 +132,11 @@ class ClothSimMetalNode {
         self.normalBuffer = normalBuffer!
         self.normalWorkBuffer = normalWorkBuffer!
         self.velocityBuffers = [velocityBuffer1!, velocityBuffer2!]
-        self.lowLevelMesh = generateLowLevelMesh(width: width, height: height)
         self.uvs = uvs
         
         self.indices = indices
+        
+        self.lowLevelMesh = generateLowLevelMesh(width: width, height: height)
     }
     
     func generateLowLevelMesh(width: uint, height: uint) -> LowLevelMesh? {
@@ -146,7 +147,7 @@ class ClothSimMetalNode {
         
         let mesh = try? LowLevelMesh(descriptor: desc)
         mesh?.withUnsafeMutableIndices { rawIndices in
-            let indices = rawIndices.bindMemory(to: UInt32.self)
+            var indices = rawIndices.bindMemory(to: UInt32.self)
             indices = indices
         }
         
@@ -166,7 +167,7 @@ class ClothSimMetalNode {
     func generateMeshResource() -> MeshResource? {
         if let lowLevelMesh {
             do {
-                return try MeshResource.generate(from: lowLevelMesh)
+                return try MeshResource(from: lowLevelMesh)
             } catch  {
                 print(error)
             }

@@ -37,7 +37,6 @@
 		6C27179D2C1B40BF0041816B /* AppModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppModel.swift; sourceTree = "<group>"; };
 		6C27179F2C1B40C60041816B /* ToggleImmersiveSpaceButton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ToggleImmersiveSpaceButton.swift; sourceTree = "<group>"; };
 		6C6423B52C1B3EB400DFCB23 /* RealityComputeShader_FlagV2.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = RealityComputeShader_FlagV2.app; sourceTree = BUILT_PRODUCTS_DIR; };
-		6C6423B82C1B3EB400DFCB23 /* RealityKitContent */ = {isa = PBXFileReference; lastKnownFileType = wrapper; path = RealityKitContent; sourceTree = "<group>"; };
 		6C6423BB2C1B3EB400DFCB23 /* RealityComputeShader_FlagV2App.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RealityComputeShader_FlagV2App.swift; sourceTree = "<group>"; };
 		6C6423BD2C1B3EB400DFCB23 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
 		6C6423BF2C1B3EB400DFCB23 /* AppModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppModel.swift; sourceTree = "<group>"; };
@@ -95,14 +94,6 @@
 			path = RealityComputeShader_FlagV2;
 			sourceTree = "<group>";
 		};
-		6C6423B72C1B3EB400DFCB23 /* Packages */ = {
-			isa = PBXGroup;
-			children = (
-				6C6423B82C1B3EB400DFCB23 /* RealityKitContent */,
-			);
-			path = Packages;
-			sourceTree = "<group>";
-		};
 		6C6423C72C1B3EB500DFCB23 /* Preview Content */ = {
 			isa = PBXGroup;
 			children = (
@@ -116,7 +107,6 @@
 			children = (
 				6C7C67E82C1093F700905CFA /* RealityComputeShader_Flag */,
 				6C6423B62C1B3EB400DFCB23 /* RealityComputeShader_FlagV2 */,
-				6C6423B72C1B3EB400DFCB23 /* Packages */,
 				6C7C67E72C1093F700905CFA /* Products */,
 			);
 			sourceTree = "<group>";
