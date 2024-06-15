@@ -18,7 +18,7 @@ struct ImmersiveView: View {
             let tex = try! await TextureResource.init(named: "LetsVisionOS")
             var material = PhysicallyBasedMaterial()
             material.baseColor = .init(texture: .init(tex))
-            material.metallic = .init(floatLiteral: 0.1)
+            material.metallic = .init(floatLiteral: 0.6)
             material.faceCulling = .none
             
             let plane = MeshResource.generatePlane(width: 1, depth: 1)

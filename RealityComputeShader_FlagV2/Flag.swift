@@ -65,11 +65,6 @@ class ClothSimMetalNode {
     
     var lowLevelMesh: LowLevelMesh?
     
-    private let vertices: [SIMD3<Float>]
-    private let normals: [SIMD3<Float>]
-    private let uvs: [SIMD2<Float>]
-    private let indices: [UInt32]
-    
     init(device: MTLDevice, width: uint, height: uint) {
         var vertices: [SIMD3<Float>] = []
         var normals: [SIMD3<Float>] = []
@@ -107,25 +102,25 @@ class ClothSimMetalNode {
         
         let vertexBuffer1 = device.makeBuffer(bytes: vertices,
                                               length: vertices.count * MemoryLayout<SIMD3<Float>>.size,
-                                              options: [.storageModeShared])//.storageModePrivate
+                                              options: [.cpuCacheModeWriteCombined])//.storageModePrivate
         
         
         let vertexBuffer2 = device.makeBuffer(length: vertices.count * MemoryLayout<SIMD3<Float>>.size,
-                                              options: [.cpuCacheModeWriteCombined])
+                                              options: [.storageModePrivate])
         
         let normalBuffer = device.makeBuffer(bytes: normals,
                                              length: normals.count * MemoryLayout<SIMD3<Float>>.size,
-                                             options: [.storageModeShared])
+                                             options: [.cpuCacheModeWriteCombined])
         
         let normalWorkBuffer = device.makeBuffer(length: normals.count * MemoryLayout<SIMD3<Float>>.size,
-                                                 options: [.cpuCacheModeWriteCombined])
+                                                 options: [.storageModePrivate])
 
         // velocity buffers
         let velocityBuffer1 = device.makeBuffer(length: vertices.count * MemoryLayout<SIMD3<Float>>.size,
-                                                options: [.cpuCacheModeWriteCombined])
+                                                options: [.storageModePrivate])
         
         let velocityBuffer2 = device.makeBuffer(length: vertices.count * MemoryLayout<SIMD3<Float>>.size,
-                                                options: [.cpuCacheModeWriteCombined])
+                                                options: [.storageModePrivate])
         
         self.vertexCount = vertices.count
         self.vb1 = vertexBuffer1!
@@ -133,22 +128,24 @@ class ClothSimMetalNode {
         self.normalBuffer = normalBuffer!
         self.normalWorkBuffer = normalWorkBuffer!
         self.velocityBuffers = [velocityBuffer1!, velocityBuffer2!]
-        self.vertices = vertices
-        self.normals = normals
-        self.uvs = uvs
-        self.indices = indices
         
-        self.lowLevelMesh = generateLowLevelMesh(width: width, height: height)
+        self.lowLevelMesh = generateLowLevelMesh(vertices: vertices, normals: normals, uvs: uvs, indices: indices, width: width, height: height)
     }
     
-    private func generateLowLevelMesh(width: uint, height: uint) -> LowLevelMesh? {
-        var vertexAttributes: [LowLevelMesh.Attribute] = [
+    private func generateLowLevelMesh(vertices: [SIMD3<Float>],
+                                      normals: [SIMD3<Float>],
+                                      uvs: [SIMD2<Float>],
+                                      indices: [UInt32],
+                                      width: uint,
+                                      height: uint) -> LowLevelMesh? {
+        let vertexCount = vertices.count
+        let vertexAttributes: [LowLevelMesh.Attribute] = [
             .init(semantic: .position, format: .float3, layoutIndex: 0, offset: 0),
             .init(semantic: .normal, format: .float3, layoutIndex: 1, offset: 0),
             .init(semantic: .uv0, format: .float2, layoutIndex: 2, offset: 0)
         ]
 
-        var vertexLayouts: [LowLevelMesh.Layout] = [
+        let vertexLayouts: [LowLevelMesh.Layout] = [
             .init(bufferIndex: 0, bufferOffset: 0, bufferStride: MemoryLayout<SIMD3<Float>>.stride),
             .init(bufferIndex: 0, bufferOffset: vertexCount * MemoryLayout<SIMD3<Float>>.size, bufferStride: MemoryLayout<SIMD3<Float>>.stride),
             .init(bufferIndex: 0, bufferOffset: vertexCount * MemoryLayout<SIMD3<Float>>.size * 2, bufferStride: MemoryLayout<SIMD2<Float>>.stride),
@@ -164,19 +161,18 @@ class ClothSimMetalNode {
         
         let mesh = try? LowLevelMesh(descriptor: desc)
         mesh?.withUnsafeMutableBytes(bufferIndex: 0, { rawBufferPointer in
-            var p = rawBufferPointer.withMemoryRebound(to: SIMD3<Float>.self) { buffer in
-                let vp = buffer.update(fromContentsOf: self.vertices+self.normals)
-                buffer.suffix(from: vp).withMemoryRebound(to: SIMD2<Float>.self) { buffer2 in
-                    let up = buffer2.update(fromContentsOf: self.uvs)
-//                    print(up)
+            let _ = rawBufferPointer.withMemoryRebound(to: SIMD3<Float>.self) { buffer in
+                let offset = buffer.update(fromContentsOf: vertices+normals)
+                buffer.suffix(from: offset).withMemoryRebound(to: SIMD2<Float>.self) { buffer2 in
+                    let end = buffer2.update(fromContentsOf: uvs)
+//                    print(end)
                 }
-//                print(vp)
+//                print(offset)
             }
-//            print(p)
         })
         mesh?.withUnsafeMutableIndices { rawIndices in
-            var indices = rawIndices.bindMemory(to: UInt32.self)
-            let _ = indices.update(fromContentsOf: self.indices)
+            let indicesPointer = rawIndices.bindMemory(to: UInt32.self)
+            let _ = indicesPointer.update(fromContentsOf: indices)
         }
         
         let meshBounds = BoundingBox(min: [0, -0.1, 0], max: [Float(width), 0.1, Float(height)])
@@ -295,14 +291,7 @@ class MetalClothSimulator {
         
         let clothSimCommandBuffer = commandQueue.makeCommandBuffer()
         let clothSimCommandEncoder = clothSimCommandBuffer?.makeComputeCommandEncoder()
-//        guard let vb = mesh.lowLevelMesh?.replace(bufferIndex: 0, using: clothSimCommandBuffer!) else {
-//            return
-//        }
-//        let v = vb.contents().withMemoryRebound(to: SIMD3<Float>.self, capacity: 2048) { pointer in
-//            let float4Ptr = pointer
-//            let float4Buffer = UnsafeBufferPointer(start: float4Ptr,count: 2048)
-//            let vertices = Array(float4Buffer)
-//        }
+        
         clothSimCommandEncoder?.setComputePipelineState(pipelineStateClothSim)
         
         clothSimCommandEncoder?.setBuffer(mesh.vb1, offset: 0, index: 0)
@@ -323,9 +312,24 @@ class MetalClothSimulator {
         clothSimCommandEncoder?.setBuffer(mesh.normalWorkBuffer, offset: 0, index: 0)
         clothSimCommandEncoder?.setBuffer(mesh.normalBuffer, offset: 0, index: 1)
         clothSimCommandEncoder?.dispatchThreadgroups(threadgroupsPerGrid, threadsPerThreadgroup: threadsPerThreadgroup)
-
+        
         clothSimCommandEncoder?.endEncoding()
         clothSimCommandBuffer?.commit()
+        
+//        clothSimCommandBuffer?.waitUntilCompleted()
+            
+        let blitBuffer = commandQueue.makeCommandBuffer()
+        let blitEncoder = blitBuffer?.makeBlitCommandEncoder()
+        
+        guard let vb = mesh.lowLevelMesh?.replace(bufferIndex: 0, using: blitBuffer!) else {
+            return
+        }
+
+        blitEncoder?.copy(from: mesh.vb1, sourceOffset: 0, to: vb, destinationOffset: 0, size: MemoryLayout<SIMD3<Float>>.size * mesh.vertexCount)
+        blitEncoder?.copy(from: mesh.normalBuffer, sourceOffset: 0, to: vb, destinationOffset: MemoryLayout<SIMD3<Float>>.size * mesh.vertexCount, size: MemoryLayout<SIMD3<Float>>.size * mesh.vertexCount)
+        
+        blitEncoder?.endEncoding()
+        blitBuffer?.commit()
     }
 }
 
